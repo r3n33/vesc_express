@@ -29,6 +29,7 @@
 typedef enum {
 	indexed2 = 0,
 	indexed4,
+	indexed8,
 	rgb332,
 	rgb565,
 	rgb888,

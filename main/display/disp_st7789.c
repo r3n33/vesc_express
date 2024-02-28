@@ -113,7 +113,7 @@ static void blast_indexed4(image_buffer_t *img, color_t *colors) {
 	hwspi_data_stream_finish();
 }
 
-static void blast_indexed8(image_buffer_t *img, color_t *colors) {
+static void blast_indexed16(image_buffer_t *img, color_t *colors) {
 	command_start(0x2C);
 	hwspi_data_stream_start();
 
@@ -228,9 +228,9 @@ bool disp_st7789_render_image(image_buffer_t *img, uint16_t x, uint16_t y, color
 		if (!colors) return false;
 		blast_indexed4(img, colors);
 		break;
-	case indexed8:
+	case indexed16:
 		if (!colors) return false;
-		blast_indexed8(img, colors);
+		blast_indexed16(img, colors);
 		break;
 	case rgb332:
 		blast_rgb332(img->data + img->data_offset, num_pix);

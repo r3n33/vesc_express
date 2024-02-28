@@ -104,7 +104,7 @@ static const char *color_desc = "Color";
 
 static lbm_uint symbol_indexed2 = 0;
 static lbm_uint symbol_indexed4 = 0;
-static lbm_uint symbol_indexed8 = 0;
+static lbm_uint symbol_indexed16 = 0;
 static lbm_uint symbol_rgb332 = 0;
 static lbm_uint symbol_rgb565 = 0;
 static lbm_uint symbol_rgb888 = 0;
@@ -135,7 +135,7 @@ static color_format_t sym_to_color_format(lbm_value v) {
 	lbm_uint s = lbm_dec_sym(v);
 	if (s == symbol_indexed2) return indexed2;
 	if (s == symbol_indexed4) return indexed4;
-	if (s == symbol_indexed8) return indexed8;
+	if (s == symbol_indexed16) return indexed16;
 	if (s == symbol_rgb332) return rgb332;
 	if (s == symbol_rgb565) return rgb565;
 	if (s == symbol_rgb888) return rgb888;
@@ -161,7 +161,7 @@ static uint32_t image_dims_to_size_bytes(color_format_t fmt, uint16_t width, uin
 		if (num_pix % 4 != 0) return (num_pix / 4) + 1;
 		else return (num_pix / 4);
 		break;
-	case indexed8: {
+	case indexed16: {
 		if (num_pix % 2 != 0) return (num_pix / 2) + 1;
 		else return (num_pix / 2);
 		break;
@@ -297,7 +297,7 @@ static bool register_symbols(void) {
 	bool res = true;
 	res = res && lbm_add_symbol_const("indexed2", &symbol_indexed2);
 	res = res && lbm_add_symbol_const("indexed4", &symbol_indexed4);
-	res = res && lbm_add_symbol_const("indexed8", &symbol_indexed8);
+	res = res && lbm_add_symbol_const("indexed16", &symbol_indexed16);
 	res = res && lbm_add_symbol_const("rgb332", &symbol_rgb332);
 	res = res && lbm_add_symbol_const("rgb565", &symbol_rgb565);
 	res = res && lbm_add_symbol_const("rgb888", &symbol_rgb888);
@@ -434,7 +434,7 @@ static void image_buffer_clear(image_buffer_t *img, uint32_t cc) {
 		memset(img->data+img->data_offset, index4_table[ix], bytes);
 	}
 	break;
-	case indexed8: {
+	case indexed16: {
 		int pixels_per_byte = 2;
 		int bytes = (img_size + pixels_per_byte - 1) / pixels_per_byte; // Round up to ensure enough space
 		uint8_t cc4bit = cc & 0xF; // Ensure the color code fits into 4 bits
@@ -497,7 +497,7 @@ static void putpixel(image_buffer_t* img, uint16_t x, uint16_t y, uint32_t c) {
 			data[byte] =  (data[byte] & ~indexed4_mask[ix]) | c << indexed4_shift[ix];
 			break;
 		}
-		case indexed8: {
+		case indexed16: {
 			uint32_t pos = y * w + x; // Position of the pixel in the pixel array
 			uint32_t byte = pos / 2; // Each byte contains two pixels
 			uint32_t nibble = pos % 2; // Determine which nibble (0 for high, 1 for low) to modify
@@ -554,7 +554,7 @@ static uint32_t getpixel(image_buffer_t* img, uint16_t x, uint16_t y) {
 			uint32_t ix  = 3 - (pos & 0x3);
 			return (uint32_t)((data[byte] & indexed4_mask[ix]) >> indexed4_shift[ix]);
 		}
-		case indexed8: {
+		case indexed16: {
 			uint32_t pos = y * w + x; // Calculate overall position in the pixel array
 			uint32_t byte = pos / 2; // Calculate which byte contains the pixel
 			uint32_t nibble = pos % 2; // Determine which nibble (0 for high, 1 for low) contains the pixel
@@ -1972,7 +1972,7 @@ static lbm_value ext_image_buffer_from_bin(lbm_value *args, lbm_uint argn) {
 		switch(bits) {
 		case 1: fmt = indexed2; break;
 		case 2: fmt = indexed4; break;
-		case 3: fmt = indexed8; break;
+		case 4: fmt = indexed16; break;
 		case 8: fmt = rgb332; break;
 		case 16: fmt = rgb565; break;
 		case 24: fmt = rgb888; break;
@@ -2621,13 +2621,13 @@ static lbm_value ext_disp_render(lbm_value *args, lbm_uint argn) {
 
 	image_buffer_t *img = (image_buffer_t*)lbm_get_custom_value(args[0]);
 
-	color_t colors[8];
-	memset(colors, 0, sizeof(color_t) * 8);
+	color_t colors[16];
+	memset(colors, 0, sizeof(color_t) * 16);
 
 	if (argn == 4 && lbm_is_list(args[3])) {
 		int i = 0;
 		lbm_value curr = args[3];
-		while (lbm_is_cons(curr) && i < 8) {
+		while (lbm_is_cons(curr) && i < 16) {
 			lbm_value arg = lbm_car(curr);
 
 			if (lbm_is_number(arg)) {
